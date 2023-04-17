@@ -1,19 +1,42 @@
 build:
-  api:
-    context: api
   frontend:
     context: frontend
+  frontend-dev:
+    context: frontend
+    target: dev
+  backend:
+    context: backend
+  backend-dev:
+    context: backend
+    target: dev
+
 deploy:
-  - helm upgrade --install movies chart --set api.image=${OKTETO_BUILD_API_IMAGE} --set frontend.image=${OKTETO_BUILD_FRONTEND_IMAGE}
+  - name: Deploy PostgreSQL
+    command: helm upgrade --install postgresql postgresql/postgresql-11.6.21.tgz -f postgresql/values.yml --version 11.6.21
+  - name: Deploy RabbitMQ
+    command:  helm upgrade --install rabbitmq rabbitmq/rabbitmq-3.11.13.tgz -f rabbitmq/values.yml --version 18.0.3
+  - name: Deploy Frontend
+    command: helm upgrade --install frontend frontend/chart --set image=${OKTETO_BUILD_FRONTEND_IMAGE}
+  - name: Deploy backend
+    command: helm upgrade --install backend backend/chart --set image=${OKTETO_BUILD_BACKEND_IMAGE}
+
 dev:
-  api:
-    command: ["bash"]
-    forward:
-      - 8080:8080
-      - 9229:9229
-    sync:
-      - api:/usr/src/app
   frontend:
+    image: ${OKTETO_BUILD_FRONTEND_DEV_IMAGE}
     command: yarn start
     sync:
       - frontend:/usr/src/app
+  backend:
+    image: ${OKTETO_BUILD_BACKEND_DEV_IMAGE}
+    command: node backend.js
+    sync:
+      - backend:/src
+    forward:
+      - 9229:9229
+            
+dependencies:
+  SaaS-Service:
+    repository: https://url.com
+    branch: main
+    wait: true
+   
