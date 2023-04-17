@@ -33,7 +33,15 @@ dev:
       - backend:/src
     forward:
       - 9229:9229
-            
+      
+external:
+  readme:
+    icon: okteto
+    notes: README.md
+    endpoints:
+    - name: readme
+      url: https://github.com/okteto/external-resources-aws
+      
 dependencies:
   SaaS-Service:
     repository: https://url.com
